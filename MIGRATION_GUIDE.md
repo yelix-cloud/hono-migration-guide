@@ -1,26 +1,4 @@
-# Migration from Hono to Yelix
-
-## Hono
-
-```ts
-import { Hono } from "hono";
-const app = new Hono();
-
-app.get("/", (c) => c.text("Hello from Hono!"));
-
-export default app;
-```
-
-## Hono Yelix Abstractor
-
-```ts
-import { YelixHono } from "jsr:@yelix/hono";
-const app = new YelixHono();
-
-app.get("/", (c) => c.text("Hello from Yelix Hono Abstractor!"));
-
-export default app;
-```
+# Migration from Hono to YelixHono
 
 ## Imports
 
@@ -53,7 +31,7 @@ separate the Zod schemas into a different file to keep them clean and reusable.
 ```ts
 import { YelixHono } from "jsr:@yelix/hono";
 import { zValidatorYelix } from "jsr:@yelix/zod-validator";
-import { z } from "zod";
+import { z } from "npm:zod";
 
 const app = new YelixHono();
 
@@ -63,5 +41,23 @@ app.use("*", async (_c, next) => {
   await next();
 });
 
-app.get("/", (c) => c.text("Hello from Yelix Hono Abstractor!"));
+app.get(
+  "/hello",
+  zValidatorYelix(
+    "query",
+    z.object({
+      name: z.string().min(2),
+    }),
+  ),
+  (c) => {
+    const { name } = c.req.valid("query" as never);
+    return c.text("Hello " + name, 200);
+  },
+);
+
+Deno.serve(app.fetch);
 ```
+
+## Conclusion
+
+This migration guide should help you to migrate from Hono to YelixHono. If you have any questions or need further assistance, feel free to ask questions in the [GitHub Discussions](https://github.com/orgs/yelix-cloud/discussions).
